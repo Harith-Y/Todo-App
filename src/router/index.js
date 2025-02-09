@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import NewTaskFormAndTasksList from '../components/NewTaskFormAndTasksListView.vue'
+import NewTaskFormAndTasksList from '../components/NewTaskFormAndTasksList.vue'
 
 const routes = [
   {
