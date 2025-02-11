@@ -1,8 +1,9 @@
 <template>
-    <div class = 'TaskList'>
-        <h2> List of Tasks go here</h2>
-        <table key="table">
-            <thead class="thead-dark">
+    <div class = 'tasksList'>
+        <h2> List of Tasks go here.</h2>
+
+        <table class="table">
+            <thead class="table-dark">
                 <tr>
                     <th class="description">Description</th>
                     <th class="edit">Edit</th>
@@ -25,7 +26,29 @@
 </template>
 
 <script>
+    import { ref, onUnmounted } from 'vue'
+
+    import { db } from '../firebase'
+    import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+
     export default {
+        setup() {
+            const tasksCollection = collection(db, "tasks");
+
+            const tasks = ref([]);
+
+            const tasksQuery = query(tasksCollection, orderBy('creationTime', 'asc'));
+
+            const unsubscribe = onSnapshot(tasksQuery, (snapshot) => {
+                console.log(snapshot.docs.map(doc => doc.data()));
+            });
+
+            onUnmounted(unsubscribe);
+
+            return {
+                tasks,
+            }
+        }
         
     }
 </script>
@@ -33,7 +56,7 @@
 <style>
 .tasksList table th.edit,
 .tasksList table th.delete {
-    width:100px;
+    width: 100px;
 }
 
 .completed {
