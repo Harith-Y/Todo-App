@@ -1,7 +1,7 @@
 <template>
     <div class="newTaskFormAndTasksList">
         <NewTaskForm />
-        <TasksLists />
+        <TasksList />
     </div>
 </template>
 
