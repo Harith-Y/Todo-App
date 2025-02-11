@@ -40,7 +40,9 @@
             const tasksQuery = query(tasksCollection, orderBy('creationTime', 'asc'));
 
             const unsubscribe = onSnapshot(tasksQuery, (snapshot) => {
-                console.log(snapshot.docs.map(doc => doc.data()));
+                tasks.value = snapshot.docs.map(doc => ({ 
+                    id: doc.id, ...doc.data() 
+                }));
             });
 
             onUnmounted(unsubscribe);
