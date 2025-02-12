@@ -20,41 +20,81 @@
 </template>
 
 <script>
-    import { ref } from 'vue'
+    import { onUnmounted, ref } from 'vue'
     import { useRoute } from 'vue-router'
 
     import { db } from '../firebase'
     import { collection, doc, updateDoc, getDoc } from 'firebase/firestore';
+    
+    import router from '@/router';
 
     export default {
         setup() {
             const tasksCollection = collection(db, "tasks");
             const route = useRoute()
             const taskID = route.query.taskID
+            const taskDescription = ref('')
+            const taskCompleted = ref(null)
+            const taskCreationDateAndTimeOfDay = ref(0)
 
-            console.log(taskID)
+            // console.log(taskID)
             const getTask = async (taskID) => {
+                try {
+                    const docRef = doc(tasksCollection, taskID);
+                    
+                    const docSnap = await getDoc(docRef);
+                    
+                    if (docSnap.exists()) {
+                        // console.log(docSnap.data())
+                        taskDescription.value = docSnap.data().description
+                        taskCompleted.value = docSnap.data().completed
+                        taskCreationDateAndTimeOfDay.value = new Date(docSnap.data().creationTime).toLocaleTimeString('default', { 
+                            // hour12: false,
+                            month: 'long',
+                            day: 'numeric', 
+                            year: 'numeric', 
+                        })
+                    } else {
+                        console.log("No such document!");
+                    }
+                }
+                catch (error) {
+                    console.log("Error deleting document: ", error);
+                }
+
+                onUnmounted(getTask)
+
+                const updateTask = async () => {
                     try {
                         const docRef = doc(tasksCollection, taskID);
                         
                         const docSnap = await getDoc(docRef);
                         
                         if (docSnap.exists()) {
-                            // Testing
-                            await console.log(docSnap.data());
+                            await updateDoc(docRef, {
+                                description: taskDescription.value,
+                                completed: taskCompleted.value
+                            });
+                            
+                            console.log("Task updated successfully!");
+                            router.push('/')
                         } else {
                             console.log("No such document!");
                         }
-                    } catch (error) {
-                        console.log("Error deleting document: ", error);
                     }
-            };
+                    catch (error) {
+                        console.log("Error updating document: ", error);
+                    } 
+                };
 
-            return {
-                // taskDescription,
-                // updateTask,
-            }
-        } 
+                return {
+                    updateTask,
+                    taskDescription,
+                    taskCompleted,
+                    taskCreationDateAndTimeOfDay,
+                }
+            } 
+        }
     }
 </script>
 
