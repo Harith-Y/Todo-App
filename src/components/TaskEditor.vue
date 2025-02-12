@@ -12,16 +12,16 @@
                 <label for="taskCompletionStatus" class="form-check-label">Completed</label>
             </div>
             <div class="form-group">
-                <label for="">Task Creation Date: {{ taskCreationDateAndTimeOfDay }}</label>
+                <label>Task Creation Date: {{ taskCreationDateAndTimeOfDay }}</label>
             </div>
-            <button type="submit" class="btn btn-primary">Update Task</button>
+            <button type="submit" class="btn btn-success">Update Task</button>
         </form>
     </div>
 </template>
 
 <script>
-    import { onUnmounted, ref } from 'vue'
-    import { useRoute } from 'vue-router'
+    import { onMounted, ref } from 'vue'
+    import { useRoute, useRouter } from 'vue-router'
 
     import { db } from '../firebase'
     import { collection, doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -32,6 +32,8 @@
         setup() {
             const tasksCollection = collection(db, "tasks");
             const route = useRoute()
+            const router = useRouter()
+
             const taskID = route.query.taskID
             const taskDescription = ref('')
             const taskCompleted = ref(null)
@@ -46,14 +48,14 @@
                     
                     if (docSnap.exists()) {
                         // console.log(docSnap.data())
-                        taskDescription.value = docSnap.data().description
-                        taskCompleted.value = docSnap.data().completed
-                        taskCreationDateAndTimeOfDay.value = new Date(docSnap.data().creationTime).toLocaleTimeString('default', { 
-                            // hour12: false,
+                        const taskData = docSnap.data();
+                        taskDescription.value = taskData.description;
+                        taskCompleted.value = taskData.completed;
+                        taskCreationDateAndTimeOfDay.value = new Date(taskData.creationTime).toLocaleDateString('default', { 
                             month: 'long',
                             day: 'numeric', 
                             year: 'numeric', 
-                        })
+                        });
                     } else {
                         console.log("No such document!");
                     }
@@ -61,39 +63,41 @@
                 catch (error) {
                     console.log("Error deleting document: ", error);
                 }
+            };
 
-                onUnmounted(getTask)
-
-                const updateTask = async (taskID) => {
-                    try {
-                        const docRef = doc(tasksCollection, taskID);
+            const updateTask = async (taskID) => {
+                try {
+                    const docRef = doc(tasksCollection, taskID);
+                    
+                    const docSnap = await getDoc(docRef);
+                    
+                    if (docSnap.exists()) {
+                        await updateDoc(docRef, {
+                            description: taskDescription.value,
+                            completed: taskCompleted.value
+                        });
                         
-                        const docSnap = await getDoc(docRef);
-                        
-                        if (docSnap.exists()) {
-                            await updateDoc(docRef, {
-                                description: taskDescription.value,
-                                completed: taskCompleted.value
-                            });
-                            
-                            console.log("Task updated successfully!");
-                            router.push('/')
-                        } else {
-                            console.log("No such document!");
-                        }
+                        console.log("Task updated successfully!");
+                        router.push('/')
+                    } else {
+                        console.log("No such document!");
                     }
-                    catch (error) {
-                        console.log("Error updating document: ", error);
-                    } 
-                };
-
-                return {
-                    updateTask,
-                    taskDescription,
-                    taskCompleted,
-                    taskCreationDateAndTimeOfDay,
                 }
-            } 
+                catch (error) {
+                    console.log("Error updating document: ", error);
+                } 
+            };
+
+            onMounted(() => {
+                getTask(); // Fetch task data when component mounts
+            });
+
+            return {
+                taskDescription,
+                taskCompleted,
+                taskCreationDateAndTimeOfDay,
+                updateTask
+            }
         }
     }
 </script>
