@@ -1,5 +1,5 @@
 <template>
-    <div class = 'taskEditor'>
+    <div class="taskEditor">
         <router-link :to="'/'" class="btn btn-primary">Back</router-link>
         <h1>Task Editor</h1>
         <form @submit.prevent="updateTask">
@@ -25,8 +25,6 @@
 
     import { db } from '../firebase'
     import { collection, doc, updateDoc, getDoc } from 'firebase/firestore';
-    
-    import router from '@/router';
 
     export default {
         setup() {
@@ -34,15 +32,20 @@
             const route = useRoute()
             const router = useRouter()
 
-            const taskID = route.query.taskID
+            const taskID = ref(route.query.taskID)
             const taskDescription = ref('')
             const taskCompleted = ref(null)
             const taskCreationDateAndTimeOfDay = ref(0)
 
             // console.log(taskID)
-            const getTask = async (taskID) => {
+            const getTask = async () => {
                 try {
-                    const docRef = doc(tasksCollection, taskID);
+                    if (!taskID.value) {
+                        console.error('No taskID provided')
+                        return
+                    }
+
+                    const docRef = doc(tasksCollection, taskID.value);
                     
                     const docSnap = await getDoc(docRef);
                     
@@ -58,16 +61,23 @@
                         });
                     } else {
                         console.log("No such document!");
+                        router.push('/')
                     }
                 }
                 catch (error) {
                     console.log("Error deleting document: ", error);
+                    router.push('/')
                 }
             };
 
-            const updateTask = async (taskID) => {
+            const updateTask = async () => {
                 try {
-                    const docRef = doc(tasksCollection, taskID);
+                    if (!taskID.value) {
+                        console.error('No taskID provided')
+                        return
+                    }
+
+                    const docRef = doc(tasksCollection, taskID.value);
                     
                     const docSnap = await getDoc(docRef);
                     
