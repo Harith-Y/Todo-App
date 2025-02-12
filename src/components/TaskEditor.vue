@@ -64,7 +64,7 @@
 
                 onUnmounted(getTask)
 
-                const updateTask = async () => {
+                const updateTask = async (taskID) => {
                     try {
                         const docRef = doc(tasksCollection, taskID);
                         
